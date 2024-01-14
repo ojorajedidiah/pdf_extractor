@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'pretty_version' => '1.0.0+no-version-set',
+        'version' => '1.0.0.0',
+        'type' => 'library',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'reference' => NULL,
+        'name' => '__root__',
+        'dev' => true,
+    ),
+    'versions' => array(
+        '__root__' => array(
+            'pretty_version' => '1.0.0+no-version-set',
+            'version' => '1.0.0.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'reference' => NULL,
+            'dev_requirement' => false,
+        ),
+        'spatie/pdf-to-text' => array(
+            'pretty_version' => '1.52.1',
+            'version' => '1.52.1.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../spatie/pdf-to-text',
+            'aliases' => array(),
+            'reference' => 'af603fff25c73accc5b790a9a8d39ca5aa5e9b37',
+            'dev_requirement' => false,
+        ),
+        'symfony/process' => array(
+            'pretty_version' => 'v6.4.2',
+            'version' => '6.4.2.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/process',
+            'aliases' => array(),
+            'reference' => 'c4b1ef0bc80533d87a2e969806172f1c2a980241',
+            'dev_requirement' => false,
+        ),
+    ),
+);
