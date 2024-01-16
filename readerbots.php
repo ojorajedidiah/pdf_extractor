@@ -23,7 +23,7 @@ use Spatie\PdfToText\Pdf;
 // }
 // die('it works '.var_dump(pathinfo($uploadFile,PATHINFO_ALL)));
 
-
+$msg='';
 
 if (isset($_POST['submit'])) {
     $dfile = $_FILES['pdfFile']['tmp_name'];
@@ -31,8 +31,13 @@ if (isset($_POST['submit'])) {
         $text = Pdf::getText($dfile);
         // $bala = getBalanceInfo($text);
         $bala = getFigures($text);
+        // die(createDebits($bala));
+        if(saveToDatabase($bala)){
+            $msg='The record <b>'.$bala['accountNumber'].'</b> has been successfully saved!';
+        }
 
-        echo json_encode($bala);
+        // echo json_encode($bala);
+        echo $msg;
     } catch (Exception $e) {
         echo 'There is error ' . $e->getMessage();
     }
@@ -238,7 +243,7 @@ function getFigures($str)
     // die(json_encode($words));
     
     // extract the account number, reporting date and account date/time
-    $extracts['reportDate']=$words[0].' '.$words[1];
+    $extracts['reportDate']=trim($words[0]).' '.trim($words[1]);
     $extracts['accountNumber']=$words[4];
     
     $dt=new DateTime($words[0]);
@@ -304,7 +309,7 @@ function getFigures($str)
                 for ($u = $x + 1; $u <= $myit; $u++) {
                     $e = $words[$u];
                     if (substr_count($e, ',') >= 1) {
-                        $lbl='Debit Entry-'.$c;
+                        $lbl='Debit-Entry-'.$c;
                         // this is the correspnding figure for the Balance identified above
                         $extracts[$lbl] = $words[$u];
                         $c++;
@@ -318,3 +323,56 @@ function getFigures($str)
     // die(json_encode($extracts));
     return $extracts;
 }
+
+
+
+function saveToDatabase($data)
+{
+    $rtn=false;
+    $debits='';
+    $total=0;
+    
+    if(count($data)>5){
+        $c=1;
+        for($s=5;$s<count($data);$s++){
+            $lbl='Debit-Entry-'.$c;
+            $total+=convertToNumber($data[$lbl]); //summ up all debits
+            $debits.='['.$data[$lbl].']:';
+            $c++;
+        }
+    }
+    
+
+    try {
+        $con = mysqli_connect("10.2.1.27", "adeleke.ojora", "Ajolala01!");
+        mysqli_select_db($con, 'firs_dashboard');
+
+        $sq="INSERT INTO cbn_collection_test (crd,cad,can,obal,cbal,deb,debtot) 
+            VALUES ('" .$data['reportDate']. "','". $data['accountDate'] 
+            . "','". $data['accountNumber']. "','". convertToNumber($data['openingBalance']) 
+            . "','". convertToNumber($data['closingBalance']). "','$debits','$total')";
+        // die($sq);
+
+        $rd = mysqli_query($con, $sq);
+        $rtn=true;
+    } catch (Exception $e) {
+        die('saveToDatabase error '.mysqli_error($con));
+        $rtn=false;
+    }
+
+
+    return $rtn;
+}
+
+function convertToNumber($str)
+{
+    $rtn='';
+    $stx=str_split($str);
+    for($i=0; $i<count($stx); $i++){
+        if ($stx[$i] != ',') {
+            $rtn.=$stx[$i];
+        }
+    }
+    return floatval($rtn);
+}
+
