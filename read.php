@@ -7,9 +7,9 @@ use Spatie\PdfToText\Pdf;
 
 
 if (isset($_POST['submit'])) {
-  $uploadDir = 'uploads/';
-  $uploadFile = $uploadDir . basename($_FILES['pdfFile']['name']);
-  $fileType = pathinfo($uploadFile, PATHINFO_EXTENSION);
+  //$uploadDir = 'uploads/';
+  //$uploadFile = $uploadDir . basename($_FILES['pdfFile']['name']);
+  $fileType = pathinfo($_FILES['pdfFile']['name'], PATHINFO_EXTENSION);
 
   //Check if the file is a PDF
   if ($fileType != "pdf") {
@@ -23,9 +23,9 @@ if (isset($_POST['submit'])) {
       $bala = getFigures($text);
 
       //die(json_encode($bala));
-      //if (saveToDatabase($bala)) {
-        //$bala['message'] = 'The record ' . $bala['accountNumber'] . ' has been successfully saved!';
-      //}
+      if (saveToDatabase($bala)) {
+        $bala['message'] = 'The record ' . $bala['accountNumber'] . ' has been successfully saved!';
+      }
       echo json_encode($bala);
     } catch (Exception $e) {
       die('there is an error ' . $e->getMessage());
