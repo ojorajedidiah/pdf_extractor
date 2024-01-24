@@ -5,7 +5,7 @@
     </a>
     <ul class="navbar-nav">
         <li class="nav-item">
-          <a href="" class="nav-link">View</a>
+          <a href="view.php" class="nav-link">View</a>
         </li>
         <li class="nav-item">
           <a href="" class="nav-link">Account Numbers</a>
@@ -14,7 +14,7 @@
 
     <ul class="order-1 order-md-3 navbar-nav navbar-no-expand ml-auto">
       <li class="nav-item">
-        <a class="nav-link" href="">Logout</a>
+        <a class="nav-link" href="logout.php">Logout</a>
       </li>
     </ul>
   </div>

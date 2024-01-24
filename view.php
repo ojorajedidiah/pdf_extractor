@@ -2,7 +2,7 @@
 session_start();
 include('classes/databaseConnection.class.php');
 
-if (isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] == 1) {
+// if (isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] == 1) {
 
 ?>
 <!doctype html>
@@ -89,7 +89,7 @@ if (isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] == 1) {
 </script>
 
 </body>
-<?php }   ?>
+<?php //}   ?>
 
 <?php
 
