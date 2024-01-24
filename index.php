@@ -7,7 +7,14 @@
 
 session_start();
 date_default_timezone_set("Africa/Lagos");
-include('classes/databaseConnection.class.php');
+include("assets/includes/error_handler.php");
+
+include('classes/databaseConnUserAccount.class.php');
+include("classes/user.class.php");
+include("classes/databaseConnection.class.php");
+include("classes/ldapConnect.class.php");
+
+include("assets/includes/auditTrail.php");
 $ip = $_SERVER['REMOTE_ADDR'];
 
 // var_dump($_REQUEST);
@@ -18,62 +25,104 @@ $msg = '';
 if (isset($_REQUEST['login']) && (isset($_REQUEST['vw']) && $_REQUEST['vw'] == 'psswd')) {
   //die('na here e dey');      
   if (!(empty($_SESSION['un'])) && !(empty($_REQUEST['password']))) {
+    $username = $_SESSION['un'];
+    $password=$_REQUEST['password'];
 
-    $db = new connectDatabase(); //    
-    if ($db->isLastQuerySuccessful()) {
-      $con = $db->connect();
+    try {
+      $ldap = new ldapConnect($username, $password);
+      $ldapStatus = $ldap->getResponses();
+      // get response
+      if ($ldapStatus['status_message'] == 'success') {
+        // get userdetails from AD
+        $ldapDetails = $ldap->userDetails();
 
-      try {
-        $dn = $_SESSION['un'];
-        $pwd = md5($_REQUEST['password']);
+        // your username in variable
+        $dn = $username;
+        $_SESSION['uspx'] = $password;
 
-        $sql = "SELECT shID,sh_userName,sh_fullName,canSendSMS,shStatus,firstTimer FROM sh_sec WHERE sh_userName = '$dn' AND sh_password = '$pwd'";
-        $stmt = $con->prepare($sql);
-        $stmt->execute();
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
-        $row = $stmt->fetch();
+        $user = new FIRSUser('acc', $dn);
 
-        if ($row) {
-          if ($row['shStatus'] !== 'active') {
-            $msg = 'Account deactivated, please contact your Admin';
-            $_REQUEST['vw'] = 'error';
+        if ($user && !empty($user->irNum)) {
+          // echo json_encode($user).'<br><br>';
+          // foreach ($rows as $row) {
+          if ($user->userStatusID == 2) {
+            $msg = 'Account deactivated.<br>Please contact ICT System Administrator <a href="mailto:ict-application@firs.gov.ng">Here!</a>';
+            trigger_error($msg, E_USER_NOTICE);
           } else {
-            $_SESSION['fullname'] = $row['sh_fullName'];
-            $_SESSION['expiryTime'] = time() + (3 * 60); //set up session to expire within 1 min
-            $_SESSION['username'] = $dn;
-            $_SESSION['canSendSMS'] = $row['canSendSMS'];
-            $_SESSION['firstTimer'] = $row['firstTimer'];
-            $_SESSION['loggedIn'] = 1;
-            $_SESSION['pwd'] = $pwd;
+            $user->getUserOrg($user->getUserUnitID());
+            // die(json_encode($user));  
 
-            //// Perform insert for login action and insert into logs table
-            $action = $_SESSION['fullname'] . ' Logged into TICOST Application';
+            // Data to store in the cookie
+            $expiration = time() + (10 * 31536000); // Expires in 10 minutes
+            setcookie('appname', $user->appname, $expiration, "/");
+            setcookie('fullname', $user->userFullname, $expiration, "/");
+            setcookie('userName', $user->userName, $expiration, "/");
+            setcookie('email', $user->userEmail, $expiration, "/");
+            setcookie('active', true, $expiration, "/");
+            setcookie('userid', $user->getUserID(), $expiration, "/");
+            setcookie('userUnit', $user->userUnit, $expiration, "/");
+            setcookie('userUnitID', $user->userUnitID, $expiration, "/");
+            setcookie('userDept', $user->userDept, $expiration, "/");
+            setcookie('userDeptID', $user->userDeptID, $expiration, "/");
+            setcookie('userDivision', $user->userDivision, $expiration, "/");
+            setcookie('userDivisionID', $user->userDivisionID, $expiration, "/");
+            setcookie('userGroup', $user->userGroup, $expiration, "/");
+            setcookie('userGroupID', $user->userGroupID, $expiration, "/");
+            setcookie('userRole', $user->userRole, $expiration, "/");
+            setcookie('userRoleID', $user->userRoleID, $expiration, "/");
+            $_SESSION['loggedIn']=1;
+
+            $userPages = array(
+              'pages' => $user->getUserPrivileges($user->userRoleID) // get & 
+            );
+            // Serialize the array into JSON
+            $jsonUserPages = json_encode($userPages);
+            // Set a cookie with the serialized JSON data
+            setcookie("rt_user_data", $jsonUserPages, $expiration, "/");
+
+            // die(json_encode($_COOKIE));
+
+            if ($user->userEmail == '') {
+              $val = updateUserDetails($user->userName, $user->userEmail);
+            }
+
+            $action = $user->userFullname . ' Logged in Dashboard!';
             $data = [
-              'logIP' => $ip,
-              'logDate' => date('Y-m-d'),
+              'logIP' => getIPAddress(),
+              'logDate' => new DateTime(),
               'logDescription' => $action,
+              'userName' => $user->userName
             ];
-            $sql = "INSERT INTO logs (logIP,logDate,logDescription) VALUES (:logIP, :logDate, :logDescription)";
-            $stmt = $con->prepare($sql);
-            $stmt->execute($data);
-            $db->closeConnection();
-            //die('i enter here');
-            if ($_SESSION['firstTimer'] == 0) {
-              die('<head><script language="javascript">window.location="home.php";</script></head>');
+            // die(var_dump($data));
+            $log = saveLoginTrail($data);
+            if ($log == 'success') {
+              // unset($_SESSION['userName']);
+              die('<head><script language="javascript">window.location="view.php";</script></head>');
+            } else {
+              trigger_error($log, E_USER_NOTICE);
             }
           }
+          // }
         } else {
-          $msg = 'Wrong username and password combination!';
-          $_REQUEST['vw'] = 'error';
+          $msg = 'You do not have an account on this application.<br>Please contact ICT System Administrator <a href="mailto:ict-application@firs.gov.ng">Here!</a>';
+          trigger_error($msg, E_USER_NOTICE);
         }
-      } catch (PDOException $er) {
-        $msg = $er->getMessage() . '<br>Please contact TICOST Team!';
-        $_REQUEST['vw'] = 'error';
+        // } else {
+        //   $msg = $db->connectionError();
+        //   trigger_error($msg, E_USER_NOTICE);
+        // }
+        // $db->closeConnection();
+      } else {
+        $msg = $ldapStatus['data'];
+        trigger_error($msg, E_USER_NOTICE);
       }
-    } else {
-      $msg = $db->connectionError();
-      $_REQUEST['vw'] = 'error';
+      $ldap->closeLDAP();
+    } catch (\Throwable $th) {
+      $msg = $th->getMessage();
+      trigger_error($msg, E_USER_NOTICE);
     }
+  } else {
+    $msg = "username and password is required";
   }
 } else {
   $_SESSION['un'] = (isset($_REQUEST['username'])) ? $_REQUEST['username'] : '';
@@ -159,3 +208,33 @@ if (isset($_REQUEST['login']) && (isset($_REQUEST['vw']) && $_REQUEST['vw'] == '
 </body>
 
 </html>
+
+<?php
+function updateUserDetails($us, $em)
+{
+  $rtn = array();
+
+  try {
+    $db = new connectDatabaseUserAccount();
+    if ($db->isLastQuerySuccessful()) {
+      $con = $db->connect();
+
+      $sql = "UPDATE users SET UserEmail =:email  WHERE UserName =:username ";
+      //die($sql);
+      $stmt = $con->prepare($sql);
+      $stmt->setFetchMode(PDO::FETCH_ASSOC);
+      $stmt->bindparam(":email", $em, PDO::PARAM_STR);
+      $stmt->bindparam(":username", $us, PDO::PARAM_STR);
+      $stmt->execute();
+    } else {
+      $rtn = $db->connectionError();
+    }
+    $db->closeConnection();
+  } catch (PDOException $e) {
+    $rtn = $e->getMessage();
+  }
+  return $rtn;
+}
+
+
+?>

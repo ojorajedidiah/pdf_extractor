@@ -1,5 +1,5 @@
 <?php
-date_default_timezone_set("Africa/Lagos");
+session_start();
 include('classes/databaseConnection.class.php');
 
 if (isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] == 1) {
@@ -26,7 +26,7 @@ if (isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] == 1) {
 <body class="hold-transition layout-top-nav">
   <!-- <div id="app"> -->
     <div class="wrapper">
-      <?php include('includes/top_menu.php'); ?>
+      <?php include('assets/includes/top_menu.php'); ?>
       <div class="content-wrapper">
         <div class="content">
           <div class="container-fluid" style="width:85%;">
@@ -37,7 +37,7 @@ if (isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] == 1) {
                     <h5>CBN Collections</h5>
                   </div>
                   <div class="col-sm-4">
-                    <a href="" class="btn btn-info float-right">Create New</a>
+                    <a href="upload_file.php" class="btn btn-info float-right">Create New</a>
                   </div>
                 </div>
               </div>
