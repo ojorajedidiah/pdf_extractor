@@ -123,5 +123,5 @@ function getCollectionRecords()
   } catch (Exception $e) {
     trigger_error($e->getMessage(), E_USER_NOTICE);
   }
-  return ($rtn == '') ? '<tr><td colspan="7" style="color:red;text-align:center;"><b>No Clients Available</b></td></tr>' : $rtn;
+  return ($rtn == '') ? '<tr><td colspan="7" style="color:red;text-align:center;"><b>No Collections Record Available</b></td></tr>' : $rtn;
 }

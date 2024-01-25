@@ -99,8 +99,14 @@ function getFigures($str)
                 break;
             }
         }
-        $dt = new DateTime($acctDat);
-        $extracts['accountDate'] = $dt->format('Y-m-d');
+        if(strlen($acctDat)==0){
+            $dt = new DateTime($words[0]);
+            $intv = new DateInterval('P1D');
+            $extracts['accountDate'] = $dt->sub($intv)->format('Y-m-d');
+        } else{
+            $dt = new DateTime($acctDat);
+            $extracts['accountDate'] = $dt->format('Y-m-d');
+        }
 
         //die(json_encode($extracts));
 
