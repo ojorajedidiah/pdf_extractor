@@ -52,6 +52,7 @@ include('classes/databaseConnection.class.php');
                         <th>Statement Date</th>
                         <th>Opening Balance</th>
                         <th>Closing Balance</th>
+                        <th>Debit(s)</th>
                         <th>Collection</th>                        
                       </tr>
                     </thead>
@@ -114,6 +115,7 @@ function getCollectionRecords()
           . $row['can'] . '</td><td>' . $row['crd'] . '</td>'
           . '<td>' . $row['cad'] . '</td><td style="text-align: right;">' . number_format($row['obal'], 2) . '</td>'
           . '<td style="text-align: right;">' . number_format($row['cbal'], 2)
+          . '</td><td style="text-align: right;">' . number_format($row['debtot'], 2)
           . '</td><td style="text-align: right;">' . number_format($diff, 2) . '</td></tr>';
       }
     } else {
