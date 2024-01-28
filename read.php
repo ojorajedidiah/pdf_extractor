@@ -41,10 +41,10 @@ if (isset($_POST['submit'])) {
             $text = Pdf::getText($dfile);
             $bala = getFigures($text);
 
-            // if (saveToDatabase($bala)) {
+            if (saveToDatabase($bala)) {
                 $dtt=new DateTime($bala['accountDate']);
                 $bala['message'] = 'The record of <b>' . $bala['accountNumber'] .'</b> for <b>'. $dtt->format('d M Y'). '</b> has been successfully saved!';
-            // }
+            }
             presentExtracts($bala);
         } catch (Exception $e) {
             die('there is an error <b>' . $e->getMessage().'</b>');
@@ -251,7 +251,7 @@ function getFigures($str)
         $extracts['closingBalance'] = $tm;
         // die(json_encode($extracts));
 
-        // extract any debit entry(ies)
+        //*************** extract any debit entry(ies) ***************//
         $c = 1;
         $acctNum=$extracts['accountNumber'];$lgt=strlen($acctNum)-3;
         for ($x = 0; $x < count($words); $x++) {
@@ -271,11 +271,12 @@ function getFigures($str)
                   || substr($acctNum,$lgt,3) == '032') { // 247 & 032 accts have a special treatment of debit entries
                     $tmp=array_slice($words,$x,10);
                     for ($u = 0; $u < count($tmp); $u++) {
-                        if (substr_count($tmp[$u], ',') >= 1) {
+                        if (substr_count($tmp[$u], ',') >= 1 && substr_count($tmp[$u], 'POSTING') >= 1) {
                             $lbl = 'debitEntry-' . $c;
                             // this is the correspnding figure for the Balance identified above
                             $extracts[$lbl] = $tmp[$u];
-                            break 2;
+                            $c++;
+                            break 2;  // it is assumed that there can only be only debit entry on these special accounts
                         }
                     }
                 } else {
