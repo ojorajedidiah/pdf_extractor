@@ -257,7 +257,7 @@ function getFigures($str)
         for ($x = 0; $x < count($words); $x++) {
             $hays = $words[$x];
             $myit = $x + 5;
-            // extract strings that have and find the word 'Multi Debit Entry' in it
+            // extract strings that have the following account numbers in it
             // if ((str_contains($words[$x], 'Multi Debit Entry') && substr_count($words[$x], ',') >= 1)) {
             if  (substr_count($hays, 'MDC2334800161') >= 1 
               || substr_count($hays, 'MDC2336300537') >= 1
@@ -270,13 +270,16 @@ function getFigures($str)
                 if(substr($acctNum,$lgt,3) == '247' 
                   || substr($acctNum,$lgt,3) == '032') { // 247 & 032 accts have a special treatment of debit entries
                     $tmp=array_slice($words,$x,10);
-                    for ($u = 0; $u < count($tmp); $u++) {
-                        if (substr_count($tmp[$u], ',') >= 1 && substr_count($tmp[$u], 'POSTING') >= 1) {
-                            $lbl = 'debitEntry-' . $c;
-                            // this is the correspnding figure for the Balance identified above
-                            $extracts[$lbl] = $tmp[$u];
-                            $c++;
-                            break 2;  // it is assumed that there can only be only debit entry on these special accounts
+                    die(json_encode($tmp));
+                    if (in_array('POSTING',$tmp)){
+                        for ($u = 0; $u < count($tmp); $u++) {
+                            if (substr_count($tmp[$u], ',') >= 1 && substr_count($tmp[$u], 'POSTING') >= 1) {
+                                $lbl = 'debitEntry-' . $c;
+                                // this is the correspnding figure for the Balance identified above
+                                $extracts[$lbl] = $tmp[$u];
+                                $c++;
+                                break 2;  // it is assumed that there can only be only debit entry on these special accounts
+                            }
                         }
                     }
                 } else {
@@ -311,7 +314,7 @@ function saveToDatabase($data)
     if (count($data) > 5) {
         $c = 1;
         for ($s = 5; $s < count($data); $s++) {
-            $lbl = 'Debit-Entry-' . $c;
+            $lbl = 'debitEntry-' . $c;
             $total += convertToNumber($data[$lbl]); //sum up all debits
             $debits .= '[' . $data[$lbl] . ']:';
             $c++;

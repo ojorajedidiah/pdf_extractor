@@ -2,6 +2,9 @@
 session_start();
 include('classes/databaseConnection.class.php');
 
+include("assets/includes/auditTrail.php");
+include("assets/includes/error_handler.php");
+
 // if (isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] == 1) {
 
 ?>
@@ -20,6 +23,11 @@ include('classes/databaseConnection.class.php');
   <script src="assets/js/jquery-3.6.0.js"></script>
   <script src="assets/js/jquery-ui.js"></script>
 
+  <script>
+    $(function() {
+      $("#dialog").dialog();
+    });
+  </script>
 
 </head>
 
@@ -60,25 +68,23 @@ include('classes/databaseConnection.class.php');
               </div>
               <div class="card-body">
                 <div class="row">
-                  <div class="card-body">
-                    <table id="grids" class="table table-bordered table-striped">
-                      <thead>
-                        <tr>
-                          <th></th>
-                          <th>Account Number</th>
-                          <th>Report Date</th>
-                          <th>Statement Date</th>
-                          <th>Opening Balance</th>
-                          <th>Closing Balance</th>
-                          <th>Debit(s)</th>
-                          <th>Collection</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php echo getCollectionRecords(); ?>
-                      </tbody>
-                    </table>
-                  </div>
+                  <table id="grids" class="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>Account Number</th>
+                        <th>Report Date</th>
+                        <th>Statement Date</th>
+                        <th>Opening Balance</th>
+                        <th>Closing Balance</th>
+                        <th>Debit(s)</th>
+                        <th>Collection</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php echo getCollectionRecords(); ?>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
